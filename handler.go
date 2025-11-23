@@ -15,6 +15,7 @@ type WebhookPayload struct {
 	Passphrase  FlexString `json:"passphrase"`
 	Symbol      FlexString `json:"symbol"`
 	Side        FlexString `json:"side"`
+	Action      FlexString `json:"action,omitempty"`
 	Type        FlexString `json:"type"`
 	Quantity    FlexString `json:"quantity"`
 	BarTime     FlexString `json:"bar_time,omitempty"`
@@ -48,6 +49,30 @@ var (
 	}()
 )
 
+func resolveSide(p WebhookPayload) (string, bool) {
+	action := strings.ToUpper(strings.TrimSpace(p.Action.String()))
+	side := strings.ToUpper(strings.TrimSpace(p.Side.String()))
+
+	if action == "OPEN LONG" || action == "OPENLONG" || action == "OPEN_LONG" {
+		return "BUY", false
+	}
+	if action == "CLOSE LONG" || action == "CLOSELONG" || action == "CLOSE_LONG" {
+		return "SELL", true
+	}
+	if action == "OPEN SHORT" || action == "OPENSHORT" || action == "OPEN_SHORT" {
+		return "SELL", false
+	}
+	if action == "CLOSE SHORT" || action == "CLOSESHORT" || action == "CLOSE_SHORT" {
+		return "BUY", true
+	}
+
+	if side == "BUY" || side == "SELL" {
+		return side, false
+	}
+
+	return "BUY", false
+}
+
 func barMinuteFromMs(ms int64) int64 {
 	if ms <= 0 {
 		nowMs := time.Now().UnixMilli()
@@ -56,8 +81,13 @@ func barMinuteFromMs(ms int64) int64 {
 	return ms / 60000
 }
 
-func executeOrder(client *BinanceClient, p WebhookPayload, side string) error {
+func executeOrder(client *BinanceClient, p WebhookPayload, side string, reduceOnly bool) error {
 	orderType := strings.ToUpper(p.Type.String())
+
+	reduceOnlyStr := ""
+	if reduceOnly {
+		reduceOnlyStr = "true"
+	}
 
 	req := OrderRequest{
 		Symbol:      p.Symbol.String(),
@@ -67,6 +97,7 @@ func executeOrder(client *BinanceClient, p WebhookPayload, side string) error {
 		Price:       p.Price.String(),
 		TimeInForce: p.TimeInForce.String(),
 		PriceMatch:  p.PriceMatch.String(),
+		ReduceOnly:  reduceOnlyStr,
 	}
 
 	if orderType == "BBO" {
@@ -99,7 +130,7 @@ func Handler(binanceClient *BinanceClient, passphrase string, enableLiveOrders b
 			return c.Status(fiber.StatusUnauthorized).SendString("Unauthorized")
 		}
 
-		side := strings.ToUpper(p.Side.String())
+		side, reduceOnly := resolveSide(p)
 
 		barMinute := barMinuteFromMs(p.BarTime.Int64())
 		key := pendingKey{Symbol: p.Symbol.String(), BarMinute: barMinute}
@@ -126,7 +157,7 @@ func Handler(binanceClient *BinanceClient, passphrase string, enableLiveOrders b
 			log.Printf("Order Details | Symbol:%s Side:%s Type:%s Qty:%s OrderID:%s BarTime:%d",
 				p.Symbol, side, p.Type, p.Quantity, p.OrderID, p.BarTime)
 			if enableLiveOrders {
-				if err := executeOrder(binanceClient, p, side); err != nil {
+				if err := executeOrder(binanceClient, p, side, reduceOnly); err != nil {
 					log.Printf("Binance Error: %v", err)
 				}
 			} else {

@@ -38,7 +38,20 @@ Docker
 
 TradingView Alert Payload
 -------------------------
-**Market Order:**
+**Market Order (with action):**
+```json
+{
+  "passphrase": "YOUR_WEBHOOK_PASSPHRASE",
+  "symbol": "{{ticker}}",
+  "action": "OPEN LONG",
+  "type": "MARKET",
+  "quantity": "0.1",
+  "bar_time": "{{time}}",
+  "order_id": "{{strategy.order.id}}"
+}
+```
+
+**Market Order (legacy side):**
 ```json
 {
   "passphrase": "YOUR_WEBHOOK_PASSPHRASE",
@@ -81,4 +94,13 @@ TradingView Alert Payload
 ```
 
 `price_match` options: `OPPONENT`, `OPPONENT_5`, `OPPONENT_10`, `OPPONENT_20`, `QUEUE`, `QUEUE_5`, `QUEUE_10`, `QUEUE_20`
+
+Action Values
+-------------
+- `OPEN LONG` → BUY
+- `CLOSE LONG` → SELL
+- `OPEN SHORT` → SELL
+- `CLOSE SHORT` → BUY
+
+You can also use `OPENLONG`, `OPEN_LONG`, `CLOSELONG`, `CLOSE_LONG`, etc.
 

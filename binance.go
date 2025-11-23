@@ -45,6 +45,7 @@ type OrderRequest struct {
 	Price       string
 	TimeInForce string
 	PriceMatch  string
+	ReduceOnly  string
 }
 
 type OrderResponse struct {
@@ -83,6 +84,10 @@ func (c *BinanceClient) CreateOrder(req OrderRequest) (*OrderResponse, error) {
 		} else if req.Price != "" {
 			params.Set("price", req.Price)
 		}
+	}
+
+	if req.ReduceOnly != "" {
+		params.Set("reduceOnly", req.ReduceOnly)
 	}
 
 	params.Set("timestamp", strconv.FormatInt(time.Now().UnixMilli(), 10))
