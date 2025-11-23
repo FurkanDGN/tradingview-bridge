@@ -61,7 +61,7 @@ TradingView Alert Payload
   "quantity": "0.1",
   "price": "{{close}}",
   "time_in_force": "GTC",
-  "bar_time": {{time}},
+  "bar_time": "{{time}}",
   "order_id": "{{strategy.order.id}}"
 }
 ```
@@ -75,7 +75,7 @@ TradingView Alert Payload
   "type": "BBO",
   "quantity": "0.1",
   "price_match": "OPPONENT",
-  "bar_time": {{time}},
+  "bar_time": "{{time}}",
   "order_id": "{{strategy.order.id}}"
 }
 ```
