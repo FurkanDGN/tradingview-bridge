@@ -1,6 +1,8 @@
 tv-binance-bot
 ==============
 
+This project is a Go-based trading bot designed to **integrate with TradingView strategy alerts via webhooks and automatically place orders on Binance**.
+
 Requirements
 ------------
 - Go 1.23+ (or Docker)
